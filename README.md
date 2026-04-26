@@ -338,24 +338,30 @@ gpg --list-secret-keys
 Example run on a fresh Fedora system:
 
 ```
-[INFO] Detected OS: fedora
+[INFO] Detected OS: debian
+[INFO] Detected family: debian
 
-[INFO] Git not found. Installing...
-[OK] Git installed successfully
+[INFO] Ensuring dependencies...
+Reading package lists...
+Installing git gnupg openssh-client...
 
-First Name: john
-Last Name: doe
-Email: john.doe@example.com
+[OK] Dependencies installed
 
-[OK] Git identity set: John Doe <john.doe@example.com>
+[INFO] Checking Git identity...
+First Name: slisk
+Last Name: lindqvist
+Email: slisk.lindqvist@example.com
+
+[OK] Git identity set: Slisk Lindqvist <slisk.lindqvist@example.com>
 
 [INFO] Checking existing GPG keys...
-[WARN] No existing GPG key found. Generating new key...
+[WARN] Generating new GPG key...
 
 gpg: key generation started
+gpg: directory '/home/user/.gnupg' created
 gpg: key ABCD1234EF567890 marked as ultimately trusted
 
-[OK] New GPG key created: ABCD1234EF567890
+[OK] GPG key ready: ABCD1234EF567890
 [OK] GPG configured
 
 [INFO] Checking SSH key...
@@ -365,36 +371,74 @@ Generating public/private ed25519 key pair.
 Your identification has been saved in /home/user/.ssh/id_ed25519
 
 [OK] SSH key created
-[OK] SSH key loaded into agent
+[OK] SSH key loaded
 
-==============================
-SSH PUBLIC KEY (ADD TO GIT PROVIDER)
-==============================
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHk... john.doe@example.com
-==============================
+[INFO] Configuring Git workflow standards...
+[OK] Merge strategy enforced (--no-ff required)
 
-==============================
-GPG PUBLIC KEY (ADD TO GIT PROVIDER)
-==============================
+------------------------------------
+SSH PUBLIC KEY
+------------------------------------
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMockKeyMaterialSlisk@example.com
+------------------------------------
+
+------------------------------------
+GPG PUBLIC KEY
+------------------------------------
 -----BEGIN PGP PUBLIC KEY BLOCK-----
-...
+
+mQENBGMockKeyDataExampleBlock
+Version: GnuPG v2
+
+xYzFakeKeyMaterialForDemoOnly
 -----END PGP PUBLIC KEY BLOCK-----
-==============================
+------------------------------------
+
+[INFO] Optional Git Aliases
+
+The following aliases can be added to your shell (.bashrc):
+
+gc   → git commit -S -m
+gco  → git checkout
+gcb  → git checkout -b
+gs   → git status -sb
+gl   → git log --oneline --graph --decorate --all
+glc  → git log --show-signature -1
+sl   → git shortlog -s -n
+gp   → git push
+gpl  → git pull
+gmnf → git merge --no-ff
+gm   → git merge --no-ff
+
+Do you want to add these aliases to ~/.bashrc? [Y/n]: Y
+
+[OK] Aliases added to ~/.bashrc
+[WARN] Run: source ~/.bashrc to activate them
 
 [OK] SETUP COMPLETE
 ------------------------------------
-OS        : fedora
-Git User  : John Doe
-Email     : john.doe@example.com
+OS        : debian
+Git User  : Slisk Lindqvist
+Email     : slisk.lindqvist@example.com
 GPG Key   : ABCD1234EF567890
 SSH Key   : /home/user/.ssh/id_ed25519
 Mode      : SAFE
 ------------------------------------
 
-Workflow:
-  git add .
-  git commit -S -m "Initial Commit: Project setup"
-  git push origin main
+Enforced Workflow:
+  main → production
+  main-dev → integration
+  dev/* → feature branches
+
+Merges MUST use:
+  git merge --no-ff <branch>
+  or git merge-no-ff <branch>
+
+Workflow example:
+  git checkout -b dev/feature main-dev
+  git commit -S -m "feat: add feature"
+  git merge --no-ff dev/feature
+  git push
 ```
 
 ---
