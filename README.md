@@ -6,8 +6,6 @@ It is designed to eliminate repetitive authentication prompts while maintaining 
 
 ---
 
----
-
 ## 💬 Good Prompts & Examples
 
 When interacting with Git, GitHub/GitLab, or this bootstrap setup, clarity in intent matters as much as correctness in commands.
@@ -450,25 +448,144 @@ git remote set-url origin git@github.com:USER/REPO.git
 
 ---
 
-# Personal Git Hygiene
-## Branching Strategy
+# 🌿 Personal Git Hygiene
+
+## 🧭 Branching Strategy
 
 All feature work happens on `main-dev`. The `main` branch is reserved for deliberate releases and triggers auto-deploy — it is never committed to directly.
 
 ![Git Flow](./images/gitflow.svg)
 
 | Branch | Purpose |
-|---|---|
+|--------|--------|
 | `main` | Production — triggers auto-deploy on merge |
-| `main-dev` | Integration branch — all work branches from and merges here |
-| `dev/feature-*` | Feature or fix branches — created from and merged back into `main-dev` |
-
-**Workflow:**
-1. Create your branch from `main-dev`
-2. Merge back into `main-dev` when done
-3. When all changes are verified together, merge `main-dev → main` to release
+| `main-dev` | Integration branch — staging and validation layer |
+| `dev/feature-*` | Feature or fix branches — isolated units of work |
 
 ---
+
+## 🔁 Workflow (Correct Merge Discipline)
+
+### 1. Create feature branch from integration layer
+
+All feature branches must originate from `main-dev`:
+
+```bash
+git checkout main-dev
+git pull origin main-dev
+git checkout -b dev/feature-name
+```
+
+---
+
+### 2. Work in atomic commits
+
+Keep commits small, meaningful, and signed:
+
+```bash
+git add .
+git commit -S -m "feat(scope): describe change clearly"
+git push -u origin dev/feature-name
+```
+
+✔ Each commit should represent one logical change  
+✔ Use GPG signing (`-S`) for integrity verification  
+
+---
+
+### 3. Merge feature → main-dev (NEVER fast-forward)
+
+All feature merges into `main-dev` must preserve branch history:
+
+```bash
+git checkout main-dev
+git pull origin main-dev
+
+git merge --no-ff dev/feature-name
+git push origin main-dev
+```
+
+### ⚠️ Critical rule
+
+Always use:
+
+```bash
+--no-ff
+```
+
+This ensures:
+- branch structure is preserved
+- feature history remains visible
+- Git graph reflects real development flow
+
+---
+
+### 4. Validate integration before release
+
+Before merging into `main`, ensure:
+
+- all features in `main-dev` are tested
+- no broken builds exist
+- commit history is clean and meaningful
+
+---
+
+### 5. Release: merge main-dev → main (controlled deployment)
+
+Production releases must also preserve history:
+
+```bash
+git checkout main
+git pull origin main
+
+git merge --no-ff main-dev
+git push origin main
+```
+
+This step triggers deployment.
+
+---
+
+## 🧠 Merge Philosophy
+
+This workflow enforces a **non-linear, traceable Git history**:
+
+```
+main
+ └── main-dev
+       ├── dev/feature-a
+       ├── dev/feature-b
+       └── dev/feature-c
+```
+
+Instead of a flattened timeline, every feature remains traceable.
+
+---
+
+## ❌ What NOT to do
+
+- ✘ Never commit directly to `main`
+- ✘ Never merge feature branches without `--no-ff`
+- ✘ Never use vague branch names (`test`, `fix`, `stuff`)
+- ✘ Never skip integration via `main-dev`
+- ✘ Never squash blindly without understanding history impact
+
+---
+
+## 🧠 Why this matters
+
+Without disciplined merging:
+
+- Git history becomes linear and meaningless
+- Feature boundaries disappear
+- Debugging becomes harder
+- Rollbacks become risky
+
+With this model:
+
+- every feature is traceable
+- releases are structured
+- history reflects real engineering decisions
 
 ## 🔮 Future upgrades (optional)
 
