@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # =========================================================
-#   git-setup-script.version.03
+#   git-setup-script.version.06
 # =========================================================
 
 set -e
@@ -249,10 +249,12 @@ echo "  gco  → git checkout"
 echo "  gcb  → git checkout -b"
 echo "  gs   → git status -sb"
 echo "  gl   → git log --oneline --graph --decorate --all"
+echo "  glc  → git log --show-signature -1"
 echo "  sl   → git shortlog -s -n"
 echo "  gp   → git push"
 echo "  gpl  → git pull"
 echo "  gmnf → git merge --no-ff"
+echo "  gm   → git merge --no-ff"
 echo ""
 
 read -rp "Do you want to add these aliases to ~/.bashrc? [Y/n]: " ADD_ALIASES
@@ -278,6 +280,7 @@ alias gcb='git checkout -b'
 # Status & logs
 alias gs='git status -sb'
 alias gl='git log --oneline --graph --decorate --all'
+alias glc='git log --show-signature -1'
 alias sl='git shortlog -s -n'
 
 # Push / Pull
@@ -291,8 +294,9 @@ alias gm='git merge --no-ff'
 # <<< git-bootstrap-aliases
 EOF
 
-    ok "Aliases added to ~/.bashrc"
-    warn "Run: source ~/.bashrc to activate them"
+    ok "Aliases installed."
+    warn "Restart your terminal or run:"
+    info "source ~/.bashrc"
   else
     warn "Aliases already exist in ~/.bashrc — skipping"
   fi
