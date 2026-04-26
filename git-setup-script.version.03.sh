@@ -30,35 +30,70 @@ ok() { echo -e "${GREEN}[OK]${RESET} $1"; }
 error() { echo -e "${RED}[ERROR]${RESET} $1"; }
 
 # ==============================
-# OS detection
+# OS / Family detection
 # ==============================
 if [[ -f /etc/os-release ]]; then
   . /etc/os-release
-  OS=$ID
+
+  OS_ID="${ID,,}"
+  OS_LIKE="${ID_LIKE,,}"
 else
   error "Cannot detect OS"
   exit 1
 fi
 
-info "Detected OS: $OS"
+detect_family() {
+  case "$OS_ID" in
+    ubuntu|debian|linuxmint|pop|zorin|elementary)
+      echo "debian"
+      ;;
+    fedora|rhel|centos|rocky|almalinux)
+      echo "fedora"
+      ;;
+    arch|manjaro|endeavouros|garuda)
+      echo "arch"
+      ;;
+    opensuse*|sles|suse)
+      echo "suse"
+      ;;
+    *)
+      # fallback to ID_LIKE parsing
+      case "$OS_LIKE" in
+        *debian*) echo "debian" ;;
+        *ubuntu*) echo "debian" ;;
+        *fedora*|*rhel*) echo "fedora" ;;
+        *arch*) echo "arch" ;;
+        *suse*) echo "suse" ;;
+        *)
+          echo "unknown"
+          ;;
+      esac
+      ;;
+  esac
+}
+
+FAMILY=$(detect_family)
+
+info "Detected OS: $OS_ID"
+info "Detected family: $FAMILY"
 
 install_packages() {
-  case "$OS" in
-    ubuntu|debian)
+  case "$FAMILY" in
+    debian)
       sudo apt update
       sudo apt install -y git gnupg openssh-client
       ;;
     fedora)
       sudo dnf install -y git gnupg2 openssh-clients
       ;;
-    arch|manjaro)
+    arch)
       sudo pacman -Sy --noconfirm git gnupg openssh
       ;;
-    opensuse*|sles)
+    suse)
       sudo zypper install -y git gpg2 openssh
       ;;
     *)
-      error "Unsupported OS: $OS"
+      error "Unsupported OS family: $FAMILY (ID: $OS_ID, LIKE: $OS_LIKE)"
       exit 1
       ;;
   esac
@@ -200,6 +235,71 @@ info "GPG PUBLIC KEY"
 echo "------------------------------------"
 gpg --armor --export "$KEY_ID"
 echo "------------------------------------"
+
+# ==============================
+# Optional Git Aliases Prompt
+# ==============================
+echo ""
+info "Optional Git Aliases"
+
+echo "The following aliases can be added to your shell (.bashrc):"
+echo ""
+echo "  gc   → git commit -S -m"
+echo "  gco  → git checkout"
+echo "  gcb  → git checkout -b"
+echo "  gs   → git status -sb"
+echo "  gl   → git log --oneline --graph --decorate --all"
+echo "  sl   → git shortlog -s -n"
+echo "  gp   → git push"
+echo "  gpl  → git pull"
+echo "  gmnf → git merge --no-ff"
+echo ""
+
+read -rp "Do you want to add these aliases to ~/.bashrc? [Y/n]: " ADD_ALIASES
+
+# Default = YES if empty input
+if [[ -z "$ADD_ALIASES" || "$ADD_ALIASES" =~ ^[Yy]$ ]]; then
+
+  BASHRC="$HOME/.bashrc"
+  MARKER="# >>> git-bootstrap-aliases"
+
+  if ! grep -q "$MARKER" "$BASHRC" 2>/dev/null; then
+    cat >> "$BASHRC" <<'EOF'
+
+# >>> git-bootstrap-aliases
+
+# Git commit (signed)
+alias gc='git commit -S -m'
+
+# Navigation
+alias gco='git checkout'
+alias gcb='git checkout -b'
+
+# Status & logs
+alias gs='git status -sb'
+alias gl='git log --oneline --graph --decorate --all'
+alias sl='git shortlog -s -n'
+
+# Push / Pull
+alias gp='git push'
+alias gpl='git pull'
+
+# Merge (no fast-forward enforcement)
+alias gmnf='git merge --no-ff'
+alias gm='git merge --no-ff'
+
+# <<< git-bootstrap-aliases
+EOF
+
+    ok "Aliases added to ~/.bashrc"
+    warn "Run: source ~/.bashrc to activate them"
+  else
+    warn "Aliases already exist in ~/.bashrc — skipping"
+  fi
+
+else
+  warn "Skipping alias installation"
+fi
 
 # ==============================
 # Summary
